@@ -1,12 +1,12 @@
 CC=gcc
 CXX=g++
 RM=rm -f
-CPPFLAGS=-g -std=c++14 $(shell root-config --cflags)
-LDFLAGS=-g $(shell root-config --ldflags)
-LDLIBS=$(shell root-config --libs)
+CPPFLAGS=-g -std=c++11 -Wall
+LDFLAGS=-g -std=c++11 -Wall
+LDLIBS=-lboost_system -lcpprest -lcrypto -lssl
 
 SRCS=main.cpp
-OBJS=$(subst .cc,.o,$(SRCS))
+OBJS=$(subst .cpp,.o,$(SRCS))
 
 all: iotslack
 
