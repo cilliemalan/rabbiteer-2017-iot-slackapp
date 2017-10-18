@@ -13,7 +13,7 @@ using namespace web::http;            // Common HTTP functionality
 using namespace web::http::client;    // HTTP client features
 using namespace concurrency::streams; // Asynchronous streams
 
-web::http::client::http_client::~http_client() {}
+web::http::client::http_client::~http_client() noexcept {}
 
 std::string api_url = "https://slack.com/api";
 
