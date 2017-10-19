@@ -1,3 +1,4 @@
+
 CC=gcc
 CXX=g++
 RM=rm -f
@@ -7,22 +8,25 @@ LDLIBS=-lboost_system -lcpprest -lcrypto -lssl
 
 SRCS=main.cpp
 OBJS=$(subst .cpp,.o,$(SRCS))
+PCH=pch.h.gch
 
 all: iotslack
 
-iotslack: $(OBJS)
+iotslack: $(OBJS) $(PCH)
 	$(CXX) $(LDFLAGS) -o iotslack $(OBJS) $(LDLIBS) 
 
 depend: .depend
 
 .depend: $(SRCS)
-	$(RM) ./.depend
-	$(CXX) $(CPPFLAGS) -MM $^>>./.depend;
+	$(CXX) $(CPPFLAGS) -MM $^>./.depend;
 
 clean:
-	$(RM) $(OBJS)
+	$(RM) $(OBJS) $(PCH) iotslack
 
 distclean: clean
 	$(RM) *~ .depend
+
+$(PCH): pch.h
+	g++ $(CPPFLAGS) pch.h
 
 include .depend

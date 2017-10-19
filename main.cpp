@@ -1,11 +1,5 @@
 
-#include <cstdio>
-#include <cstdlib>
-
-#include <string>
-
-#include <cpprest/http_client.h>
-#include <cpprest/filestream.h>
+#include "pch.h"
 
 using namespace utility;              // Common utilities like string conversions
 using namespace web;                  // Common features like URIs.
