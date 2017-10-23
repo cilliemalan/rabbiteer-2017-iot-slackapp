@@ -204,6 +204,32 @@ pplx::task<void> slack_app::send_message(const utility::string_t &text, const ut
     return _rtm_client.send(message);
 }
 
+static std::regex rx_emoji(":([a-zA-Z0-9_-]+):");
+std::vector<std::string> slack_app::get_emojis_in_message(const std::string &s) const
+{
+    std::vector<std::string> result;
+    auto emojis_begin = std::sregex_iterator(s.begin(), s.end(), rx_emoji);
+    auto emojis_end = std::sregex_iterator();
+
+    for (std::sregex_iterator i = emojis_begin; i != emojis_end; ++i)
+    {
+        std::smatch match = *i;
+        std::string match_str = match.str(1);
+        result.push_back(match_str);
+    }
+
+    std::sort(result.begin(), result.end());
+    auto last = std::unique(result.begin(), result.end());
+    result.erase(last, result.end());
+
+    return result;
+}
+
+pplx::task<std::map<std::string, std::string>> get_emojis()
+{
+    return pplx::task_from_result(std::map<std::string, std::string>());
+}
+
 pplx::task<void> slack_app::process_loop()
 {
     pplx::task<void> at_verified
