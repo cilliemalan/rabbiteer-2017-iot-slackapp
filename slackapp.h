@@ -27,12 +27,19 @@ private:
     const utility::string_t _bot_access_token;
     web::uri _rtm_url;
     bool _access_ok;
+    std::atomic<int> _messageid;
+    utility::string_t _bot_userid;
 
     pplx::task<bool> test_access_token(const utility::string_t &token);
+    pplx::task<utility::string_t> get_userid(const utility::string_t &token);
     pplx::task<void> verify_access_tokens();
     pplx::task<void> process_loop();
     pplx::task<web::uri> get_ws_url();
     pplx::task<void> listen();
+
+    pplx::task<void> handle_message(web::json::value message);
+
+    pplx::task<void> send_message(const utility::string_t &mesasge, const utility::string_t &channel);
 
     inline static web::websockets::client::websocket_client_config get_rtm_client_config(utility::string_t access_token)
     {

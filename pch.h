@@ -9,6 +9,7 @@
 #include <chrono>
 #include <thread>
 #include <codecvt>
+#include <atomic>
 
 #include <cpprest/http_client.h>
 #include <cpprest/ws_client.h>
