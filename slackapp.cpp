@@ -46,7 +46,6 @@ pplx::task<web::uri> slack_app::get_ws_url()
         }
         else
         {
-            //throw std::runtime_error("TODO");
             throw std::runtime_error(N(obj.at(U("error")).as_string()));
         }
     });
