@@ -3,3 +3,8 @@ iotslack
 /.vscode
 *.pch
 *.gch
+.vs/
+x64/
+Release/
+Debug/
+*.user
