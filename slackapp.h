@@ -11,7 +11,8 @@ public:
         _client(api_url),
         _rtm_client(get_rtm_client_config(bot_access_token)),
         _access_token(access_token),
-        _bot_access_token(bot_access_token)
+        _bot_access_token(bot_access_token),
+        _access_ok(false)
     {
         printf("constructing\n");
         if(access_token.empty()) throw std::runtime_error("access_token cannot be empty");
@@ -29,6 +30,7 @@ private:
     bool _access_ok;
     std::atomic<int> _messageid;
     utility::string_t _bot_userid;
+    std::map<std::string, std::string> _emojis;
 
     pplx::task<bool> test_access_token(const utility::string_t &token);
     pplx::task<utility::string_t> get_userid(const utility::string_t &token);

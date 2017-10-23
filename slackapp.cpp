@@ -225,9 +225,28 @@ std::vector<std::string> slack_app::get_emojis_in_message(const std::string &s) 
     return result;
 }
 
-pplx::task<std::map<std::string, std::string>> get_emojis()
+pplx::task<std::map<std::string, std::string>> slack_app::get_emojis()
 {
-    return pplx::task_from_result(std::map<std::string, std::string>());
+    auto path = U("emoji.list?token=") + _access_token;
+
+    return _client.request(methods::POST, path)
+        .then([=](http_response response) {
+        return response.extract_json();
+    }).then([=](json::value json) {
+        std::map<std::string, std::string> obj_emoji;
+        auto emojis = json[U("emoji")].as_object();
+
+        for(auto i = emojis.begin(); i != emojis.end(); ++i)
+        {
+            auto kvp = *i;
+            auto key = N(kvp.first);
+            auto val = N(kvp.second.as_string());
+
+            obj_emoji[key] = val;
+        }
+
+        return obj_emoji;
+    });
 }
 
 pplx::task<void> slack_app::process_loop()
@@ -250,7 +269,7 @@ pplx::task<void> slack_app::process_loop()
         {
             return pplx::task_from_result();
         }
-    }).then([this] {
+    }).then([=] {
         _access_ok = true;
         printf("verified\n");
 
@@ -268,7 +287,13 @@ pplx::task<void> slack_app::process_loop()
             return pplx::task_from_result();
         }
 
-    }).then([this] {
+    }).then([=] {
+
+        //get emojis
+        return get_emojis().then([=](std::map<std::string, std::string> emojis) {
+            _emojis = emojis;
+        });
+    }).then([=] {
 
         //connect
         return _rtm_client.connect(_rtm_url);
