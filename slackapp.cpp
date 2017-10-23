@@ -156,8 +156,6 @@ pplx::task<void> slack_app::process_loop()
         {
             task.get();
             printf("connected.\n");
-
-            _rtm_url = U("");
         }
         catch (...)
         {
@@ -166,6 +164,7 @@ pplx::task<void> slack_app::process_loop()
             // force re-getting url
             _rtm_url = U("");
             _access_ok = false;
+
             return pplx::task_from_result();
         }
 
