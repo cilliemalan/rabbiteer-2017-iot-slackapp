@@ -31,7 +31,6 @@ private:
     pplx::task<bool> test_access_token(const utility::string_t &token);
     pplx::task<void> verify_access_tokens();
     pplx::task<void> process_loop();
-    pplx::task<void> run_internal();
     pplx::task<web::uri> get_ws_url();
     pplx::task<void> listen();
 
