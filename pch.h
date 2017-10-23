@@ -10,6 +10,9 @@
 #include <thread>
 #include <codecvt>
 #include <atomic>
+#include <regex>
+#include <map>
+#include <vector>
 
 #include <cpprest/http_client.h>
 #include <cpprest/ws_client.h>
