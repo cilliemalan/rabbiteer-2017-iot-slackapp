@@ -237,7 +237,7 @@ std::vector<std::string> slack_app::get_emojis_in_message(const std::string &s) 
     return result;
 }
 
-pplx::task<std::map<std::string, std::string>> slack_app::get_emojis()
+pplx::task<std::map<std::string, std::string>> slack_app::get_custom_emojis()
 {
     auto path = U("emoji.list?token=") + _access_token;
 
@@ -302,8 +302,11 @@ pplx::task<void> slack_app::process_loop()
     }).then([=] {
 
         //get emojis
-        return get_emojis().then([=](std::map<std::string, std::string> emojis) {
-            _emojis = emojis;
+        return get_custom_emojis().then([=](std::map<std::string, std::string> emojis) {
+            for(auto &i : emojis)
+            {
+                _emojis.insert_or_assign(i.first, i.second);
+            }
         });
     }).then([=] {
 
@@ -331,6 +334,45 @@ pplx::task<void> slack_app::process_loop()
     }).then([] {
         printf("listen over\n");
     });
+}
+
+
+pplx::task<const void*> slack_app::get_emoji_data(const std::string &emoji)
+{
+    return pplx::task_from_result<const void*>(nullptr);
+}
+
+pplx::task<std::string> slack_app::get_emoji_url(const std::string &emoji)
+{
+    //try cached emoji
+    auto found = _emojis.find(emoji);
+    if(found != _emojis.end())
+    {
+        return pplx::task_from_result(found->second);
+    }
+    else
+    {
+        //get emojis again
+        return get_custom_emojis().then([this,emoji](std::map<std::string, std::string> emojis) {
+
+            // cache new custom emojis
+            for (auto &i : emojis)
+            {
+                _emojis.insert_or_assign(i.first, i.second);
+            }
+
+            // find from custom emojis
+            auto found2 = _emojis.find(emoji);
+            if (found2 != _emojis.end())
+            {
+                return found2->second;
+            }
+            else
+            {
+                return std::string();
+            }
+        });
+    }
 }
 
 void slack_app::run()
