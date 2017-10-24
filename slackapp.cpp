@@ -169,7 +169,19 @@ pplx::task<void> slack_app::handle_message(web::json::value message)
 
             if(from != _bot_userid)
             {
-                return send_message(U("You said: ") + text, channel);
+                auto emojis = get_emojis_in_message(N(text));
+
+                if(emojis.size() != 0)
+                {
+                    std::string replymsg("you specified these emojis: ");
+                    for (auto&emoji : emojis)
+                    {
+                        replymsg += ":" + emoji + ":";
+                    }
+
+                    return send_message(W(replymsg), channel);
+                }
+
             }
         }
         else if (type == U("presence_change") || type == U("desktop_notification"))
