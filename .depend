@@ -1,3 +1,4 @@
 main.o: main.cpp pch.h slackapp.h utils.h
 slackapp.o: slackapp.cpp pch.h slackapp.h utils.h
 utils.o: utils.cpp pch.h utils.h
+emoji.o: emoji.cpp pch.h emoji.h
