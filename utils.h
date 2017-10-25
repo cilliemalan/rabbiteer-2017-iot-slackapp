@@ -55,35 +55,37 @@ pplx::task<void> sequential_for(_Iter begin, _Iter end, _Func transform)
     return last_task;
 }
 
-
 template<typename _Iter, typename _Func>
 auto sequential_transform(_Iter begin, _Iter end, _Func transform)
--> decltype(pplx::task<std::vector<typename std::iterator_traits<_Iter>::value_type>>())
+-> decltype(pplx::task<std::vector<typename pplx::details::_TaskTypeTraits<typename std::result_of<_Func(const typename std::iterator_traits<_Iter>::reference)>::type>::_TaskRetType>>())
 {
     typedef typename std::iterator_traits<_Iter>::value_type _Elem;
     typedef const typename std::iterator_traits<_Iter>::pointer _PElem;
     typedef const typename std::iterator_traits<_Iter>::reference _CRef;
-    auto poutput = std::make_shared<std::vector<_Elem>>();
+    typedef typename std::result_of<_Func(_CRef)>::type _TransformResultTask;
+    typedef typename pplx::details::_TaskTypeTraits<_TransformResultTask>::_TaskRetType _RElem;
+
+    auto poutput = std::make_shared<std::vector<_RElem>>();
 
     pplx::task<void> last_task = pplx::task_from_result();
 
     while (begin != end)
     {
-        _CRef v = *begin;
+        _Elem v = *begin;
         ++begin;
 
-        last_task = last_task.then([&v, poutput, transform] {
+        last_task = last_task.then([v, poutput, transform] {
 
-            pplx::task<_Elem> transformed = transform(v);
+            pplx::task<_RElem> transformed = transform(v);
 
-            return transformed.then([poutput](_Elem result) {
+            return transformed.then([poutput](_RElem result) {
                 poutput->emplace_back(result);
             });
         });
 
     }
 
-    return last_task.then([=] {
-        return std::forward<std::vector<_Elem>>(*poutput);
+    return last_task.then([poutput] {
+        return *poutput;
     });
 }
