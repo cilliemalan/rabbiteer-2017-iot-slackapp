@@ -171,17 +171,42 @@ pplx::task<void> slack_app::handle_message(web::json::value message)
             {
                 auto emojis = get_emojis_in_message(N(text));
 
-                if(emojis.size() != 0)
+                sequential_transform(emojis.begin(), emojis.end(),
+                    [=] (std::string p) -> pplx::task<std::pair<std::string, std::string>>
                 {
-                    std::string replymsg("you specified these emojis: ");
-                    for (auto&emoji : emojis)
+                    return get_emoji_url(p).then([=](std::string url)
                     {
-                        replymsg += ":" + emoji + ":";
+                        return std::make_pair(p, url);
+                    });
+                })
+                .then([=] (std::vector<std::pair<std::string, std::string>> urls) {
+                    std::string replymsg;
+
+                    if (urls.size())
+                    {
+                        replymsg = "you specified these emojis: \n";
+                        for (auto&pair : urls)
+                        {
+                            std::string url;
+                            if(pair.second.empty())
+                            {
+                                url = ":question:";
+                            }
+                            else
+                            {
+                                url = pair.second;
+                            }
+
+                            replymsg += "  " + pair.first + " -> " + url + "\n";
+                        }
+                    }
+                    else
+                    {
+                        replymsg = "you did not specify any emojis";
                     }
 
                     return send_message(W(replymsg), channel);
-                }
-
+                });
             }
         }
         else if (type == U("presence_change") || type == U("desktop_notification"))
