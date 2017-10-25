@@ -241,7 +241,7 @@ pplx::task<void> slack_app::send_message(const utility::string_t &text, const ut
     return _rtm_client.send(message);
 }
 
-static std::regex rx_emoji(":([a-zA-Z0-9_-]+):");
+static std::regex rx_emoji(":([-a-zA-Z0-9_+]+):");
 std::vector<std::string> slack_app::get_emojis_in_message(const std::string &s) const
 {
     std::vector<std::string> result;
