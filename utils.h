@@ -20,6 +20,13 @@ pplx::task<T> task_after(T w, std::chrono::duration<_Rep, _Period> delay) {
     });
 }
 
+template <class _Rep, class _Period>
+pplx::task<void> task_delay(std::chrono::duration<_Rep, _Period> delay) {
+    return pplx::create_task([=] {
+        std::this_thread::sleep_for(delay);
+    });
+}
+
 std::string utf16_to_utf8(const std::wstring &w);
 std::wstring utf8_to_utf16(const std::string &w);
 
