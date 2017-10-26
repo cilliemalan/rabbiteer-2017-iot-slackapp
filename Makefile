@@ -1,5 +1,4 @@
 
-CC=gcc
 CXX=g++
 RM=rm -f
 CPPFLAGS=-g -std=c++11 -Wall
@@ -12,7 +11,7 @@ PCH=pch.h.gch
 
 all: iotslack
 
-iotslack: $(OBJS) $(PCH)
+iotslack: $(PCH) $(OBJS)
 	$(CXX) $(LDFLAGS) -o iotslack $(OBJS) $(LDLIBS) 
 
 depend: .depend
@@ -27,6 +26,6 @@ distclean: clean
 	$(RM) *~ .depend
 
 $(PCH): pch.h
-	g++ $(CPPFLAGS) pch.h
+	$(CXX) $(CPPFLAGS) pch.h
 
 include .depend
