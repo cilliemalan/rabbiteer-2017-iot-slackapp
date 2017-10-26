@@ -34,8 +34,6 @@ std::wstring utf8_to_utf16(const std::string &w);
 template<typename _Iter, typename _Func>
 pplx::task<void> sequential_for(_Iter begin, _Iter end, _Func transform)
 {
-    typedef typename std::iterator_traits<_Iter>::value_type _Elem;
-    typedef const typename std::iterator_traits<_Iter>::pointer _PElem;
     typedef const typename std::iterator_traits<_Iter>::reference _CRef;
 
     pplx::task<void> last_task = pplx::task_from_result();
@@ -60,7 +58,6 @@ auto sequential_transform(_Iter begin, _Iter end, _Func transform)
 -> decltype(pplx::task<std::vector<typename pplx::details::_TaskTypeTraits<typename std::result_of<_Func(const typename std::iterator_traits<_Iter>::reference)>::type>::_TaskRetType>>())
 {
     typedef typename std::iterator_traits<_Iter>::value_type _Elem;
-    typedef const typename std::iterator_traits<_Iter>::pointer _PElem;
     typedef const typename std::iterator_traits<_Iter>::reference _CRef;
     typedef typename std::result_of<_Func(_CRef)>::type _TransformResultTask;
     typedef typename pplx::details::_TaskTypeTraits<_TransformResultTask>::_TaskRetType _RElem;
