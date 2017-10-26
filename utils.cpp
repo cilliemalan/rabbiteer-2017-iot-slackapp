@@ -1,11 +1,6 @@
 #include "pch.h"
 #include "utils.h"
 
-
-#ifndef _WIN32
-web::http::client::http_client::~http_client() noexcept {}
-#endif
-
 static pplx::task<bool> _do_while_iteration(std::function<pplx::task<bool>(void)> func)
 {
     pplx::task_completion_event<bool> ev;
