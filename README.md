@@ -23,5 +23,10 @@ or on windows just open the solution in VS.
 
 # Running
 It expects `SLACK_ACCESS_TOKEN` and `SLACK_BOT_ACCESS_TOKEN` to be set as environment
-variables. Obtain these by [creating a slack app](https://api.slack.com/apps?new_app=1).
+variables. Obtain these by [creating a slack app](https://api.slack.com/apps?new_app=1)
+and getting the tokens on the OAuth page:
+
+![oauth page](https://i.imgur.com/r45xqrj.png)
+
+Note: you will need to add scopes: `bot`, `emoji:read`, `chat:write:bot`, `channels:read`, `channels:history` (disclaimer: I'm not sure that you need all of them but these are the ones enabled for me).
 
