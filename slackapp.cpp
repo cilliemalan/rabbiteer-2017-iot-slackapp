@@ -375,7 +375,7 @@ pplx::task<bool> slack_app::process_loop()
                     {
                         for (auto& i : emojis)
                         {
-                            _emojis.insert_or_assign(i.first, i.second);
+                            _emojis[i.first] = i.second;
                         }
 
                         printf("got custom emojis\n");
@@ -446,7 +446,7 @@ pplx::task<std::string> slack_app::get_emoji_url(const std::string& emoji)
                 // cache new custom emojis
                 for (auto& i : emojis)
                 {
-                    _emojis.insert_or_assign(i.first, i.second);
+                    _emojis[i.first] = i.second;
                 }
 
                 // find from custom emojis
