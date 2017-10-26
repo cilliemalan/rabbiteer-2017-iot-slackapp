@@ -16,16 +16,16 @@ pplx::task<bool> slack_app::test_access_token(const string_t& access_token)
     auto path = U("auth.test?token=") + access_token;
 
     return _client.request(methods::POST, path)
-        .then([=](http_response response)
-        {
-            return response.extract_json();
-        })
-        .then([=](json::value json)
-        {
-            return json.as_object()
-                       .at(U("ok"))
-                       .as_bool();
-        });
+                  .then([=](http_response response)
+                  {
+                      return response.extract_json();
+                  })
+                  .then([=](json::value json)
+                  {
+                      return json.as_object()
+                                 .at(U("ok"))
+                                 .as_bool();
+                  });
 }
 
 pplx::task<utility::string_t> slack_app::get_userid(const string_t& access_token)
@@ -73,7 +73,7 @@ pplx::task<web::uri> slack_app::get_ws_url()
         });
 }
 
-pplx::task<void> slack_app::verify_access_tokens()
+pplx::task<bool> slack_app::verify_access_tokens()
 {
     printf("verifying\n");
     std::array<pplx::task<bool>, 2> tasks
@@ -82,7 +82,7 @@ pplx::task<void> slack_app::verify_access_tokens()
         test_access_token(_bot_access_token)
     };
 
-    pplx::task<void> combined = pplx::
+    pplx::task<bool> combined = pplx::
         when_all(std::begin(tasks), std::end(tasks))
         .then([](std::vector<bool> results)
         {
@@ -102,7 +102,12 @@ pplx::task<void> slack_app::verify_access_tokens()
                     messages += "\n  Problem with bot access token";
                 }
 
-                throw std::runtime_error(messages);
+                printf("%s\n", messages.c_str());
+                return false;
+            }
+            else
+            {
+                return true;
             }
         });
 
@@ -116,8 +121,7 @@ pplx::task<void> slack_app::listen()
 
     return async_do_while([=]()
     {
-        return _rtm_client
-            .receive()
+        return _rtm_client->receive()
             .then([=](web::websockets::client::websocket_incoming_message in_msg)
             {
                 return in_msg.extract_string()
@@ -254,7 +258,7 @@ pplx::task<void> slack_app::send_message(const utility::string_t& text, const ut
     websockets::client::websocket_outgoing_message message;
     message.set_utf8_message(N(obj.serialize()));
 
-    return _rtm_client.send(message);
+    return _rtm_client->send(message);
 }
 
 static std::regex rx_emoji(":([-a-zA-Z0-9_+]+):");
@@ -306,93 +310,117 @@ pplx::task<std::map<std::string, std::string>> slack_app::get_custom_emojis()
         });
 }
 
-pplx::task<void> slack_app::process_loop()
+pplx::task<bool> slack_app::process_loop()
 {
-    pplx::task<void> at_verified
-    {
-        _access_ok ? pplx::task_from_result() : verify_access_tokens()
-    };
+    pplx::task<void> at_root = pplx::task_from_result();
 
-    // the task will resolve on disconnect
-    return at_verified
-        .then([=]
+    if (_rapid_fail > 2)
+    {
+        _access_ok = false;
+        _rtm_url = U("");
+        at_root = task_delay(std::chrono::seconds(3));
+    }
+
+    return at_root.then([=]
+    {
+        return pplx::task<bool>
         {
-            if (_bot_userid.empty())
+            _access_ok
+                ? pplx::task_from_result(true)
+                : verify_access_tokens().then([=](bool verified)
+                {
+                    _access_ok = verified;
+                    printf("verified: %s\n", verified ? "true" : "false");
+                    return verified;
+                })
+        };
+    }).then([=](bool verified)
+    {
+        if (!verified)
+        {
+            return pplx::task_from_result(false);
+        }
+        else
+        {
+            // get bot user id
+            pplx::task<void> at_botuserid
             {
-                return get_userid(_bot_access_token)
+                _bot_userid.empty()
+                    ? get_userid(_bot_access_token)
                     .then([=](string_t userid)
                     {
                         printf("my user id: %s\n", N(userid).c_str());
                         _bot_userid = userid;
-                    });
-            }
-            else
-            {
-                return pplx::task_from_result();
-            }
-        })
-        .then([=]
-        {
-            _access_ok = true;
-            printf("verified\n");
+                    })
+                    : pplx::task_from_result()
+            };
 
-
-            //get url
-            if (_rtm_url.is_empty())
+            // get url
+            pplx::task<void> at_url
             {
-                return get_ws_url()
-                    .then([=](web::uri wsurl)
+                _rtm_url.is_empty()
+                    ? get_ws_url().then([=](web::uri wsurl)
                     {
                         printf("got ws url\n");
                         _rtm_url = wsurl;
-                    });
-            }
-            else
+                    })
+                    : pplx::task_from_result()
+            };
+
+            // get emojis
+            pplx::task<void> at_emojis
             {
-                return pplx::task_from_result();
-            }
-        })
-        .then([=]
-        {
-            //get emojis
-            return get_custom_emojis()
-                .then([=](std::map<std::string, std::string> emojis)
-                {
-                    for (auto& i : emojis)
+                _emojis.empty()
+                    ? get_custom_emojis().then([=](std::map<std::string, std::string> emojis)
                     {
-                        _emojis.insert_or_assign(i.first, i.second);
-                    }
+                        for (auto& i : emojis)
+                        {
+                            _emojis.insert_or_assign(i.first, i.second);
+                        }
+
+                        printf("got custom emojis\n");
+                    })
+                    : pplx::task_from_result()
+            };
+
+            // wait while they complete
+            std::vector<pplx::task<void>> tasks{at_botuserid, at_url, at_emojis};
+            return pplx::when_all(tasks.begin(), tasks.end()).then([=]
+            {
+                // then connect
+
+                reset_rtm_client();
+                return _rtm_client->connect(_rtm_url).then([this]()
+                {
+                    printf("connected.\n");
+                    _rapid_fail = 0;
+
+                    return listen().then([=] () {
+                        // will only get here if listening stops without error for some reason
+                        return true; 
+                    });
                 });
-        })
-        .then([=]
+            });
+        }
+    }).then([this](pplx::task<bool> listen_task)
+    {
+        try
         {
-            //connect
-            return _rtm_client.connect(_rtm_url);
-        })
-        .then([this](pplx::task<void> task)
+            // if we return true here listening has stopped but without error someohow.
+            return listen_task.get();
+        }
+        catch (const std::exception& ex)
         {
-            try
-            {
-                task.get();
-                printf("connected.\n");
-            }
-            catch (...)
-            {
-                printf("connection error.\n");
-
-                // force re-getting url
-                _rtm_url = U("");
-                _access_ok = false;
-
-                return pplx::task_from_result();
-            }
-
-            return listen();
-        })
-        .then([]
+            printf("listening stopped with error: %s\n", ex.what());
+        }
+        catch (...)
         {
-            printf("listen over\n");
-        });
+            printf("listening stopped with unknown error\n");
+        }
+
+        ++_rapid_fail;
+        return true;
+    });
 }
 
 
@@ -439,14 +467,9 @@ void slack_app::run()
 {
     printf("enteing\n");
 
-    auto task = async_do_while([=]
-    {
-        return process_loop()
-            .then([=]
-            {
-                return true;
-            });
-    });
+    auto loop = std::bind(&slack_app::process_loop, this);
+
+    auto task = async_do_while(loop);
 
     task.wait();
 }
