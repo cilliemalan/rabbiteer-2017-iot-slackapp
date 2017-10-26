@@ -161,52 +161,56 @@ pplx::task<void> slack_app::handle_message(web::json::value message)
         }
         else if (type == U("message"))
         {
-            auto text = message[U("text")].as_string();
-            auto channel = message[U("channel")].as_string();
-            auto from = message[U("user")].as_string();
-
-            printf("got message: %s from %s\n", N(text).c_str(), N(from).c_str());
-
-            if(from != _bot_userid)
+            auto text = message[U("text")];
+            std::string stext;
+            if(text.is_string() && !(stext = N(text.as_string())).empty())
             {
-                auto emojis = get_emojis_in_message(N(text));
+                auto channel = message[U("channel")].as_string();
+                auto from = message[U("user")].as_string();
 
-                sequential_transform(emojis.begin(), emojis.end(),
-                    [=] (std::string p) -> pplx::task<std::pair<std::string, std::string>>
+                printf("got message: %s from %s\n", stext.c_str(), N(from).c_str());
+
+                if(from != _bot_userid)
                 {
-                    return get_emoji_url(p).then([=](std::string url)
-                    {
-                        return std::make_pair(p, url);
-                    });
-                })
-                .then([=] (std::vector<std::pair<std::string, std::string>> urls) {
-                    std::string replymsg;
+                    auto emojis = get_emojis_in_message(stext);
 
-                    if (urls.size())
+                    sequential_transform(emojis.begin(), emojis.end(),
+                        [=] (std::string p) -> pplx::task<std::pair<std::string, std::string>>
                     {
-                        replymsg = "you specified these emojis: \n";
-                        for (auto&pair : urls)
+                        return get_emoji_url(p).then([=](std::string url)
                         {
-                            std::string url;
-                            if(pair.second.empty())
-                            {
-                                url = ":question:";
-                            }
-                            else
-                            {
-                                url = pair.second;
-                            }
+                            return std::make_pair(p, url);
+                        });
+                    })
+                    .then([=] (std::vector<std::pair<std::string, std::string>> urls) {
+                        std::string replymsg;
 
-                            replymsg += "  " + pair.first + " -> " + url + "\n";
+                        if (urls.size())
+                        {
+                            replymsg = "you specified these emojis: \n";
+                            for (auto&pair : urls)
+                            {
+                                std::string url;
+                                if(pair.second.empty())
+                                {
+                                    url = ":question:";
+                                }
+                                else
+                                {
+                                    url = pair.second;
+                                }
+
+                                replymsg += "  " + pair.first + " -> " + url + "\n";
+                            }
                         }
-                    }
-                    else
-                    {
-                        replymsg = "you did not specify any emojis";
-                    }
+                        else
+                        {
+                            replymsg = "you did not specify any emojis";
+                        }
 
-                    return send_message(W(replymsg), channel);
-                });
+                        return send_message(W(replymsg), channel);
+                    });
+                }
             }
         }
         else if (type == U("presence_change") || type == U("desktop_notification"))
