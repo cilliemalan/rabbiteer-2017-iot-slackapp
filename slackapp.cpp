@@ -77,10 +77,10 @@ pplx::task<bool> slack_app::verify_access_tokens()
 {
     printf("verifying\n");
     std::array<pplx::task<bool>, 2> tasks
-    {
+    {{
         test_access_token(_access_token),
         test_access_token(_bot_access_token)
-    };
+    }};
 
     pplx::task<bool> combined = pplx::
         when_all(std::begin(tasks), std::end(tasks))
