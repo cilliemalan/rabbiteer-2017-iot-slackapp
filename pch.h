@@ -22,3 +22,6 @@
 #endif
 
 #include <pplx/pplxtasks.h>
+
+#include <gif_lib.h>
+#include <png.h>

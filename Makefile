@@ -3,7 +3,7 @@ CXX=g++
 RM=rm -f
 CPPFLAGS=-g -std=c++11 -Wall
 LDFLAGS=-g -std=c++11 -Wall
-LDLIBS=-lboost_system -lcpprest -lcrypto -lssl
+LDLIBS=-lboost_system -lcpprest -lcrypto -lssl -lgif -lpng
 
 SRCS=main.cpp slackapp.cpp utils.cpp emoji.cpp
 OBJS=$(subst .cpp,.o,$(SRCS))
