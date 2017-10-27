@@ -131,8 +131,8 @@ image image::from_gif(const void* sourcedata, size_t buffersize)
         const auto& image_desc = source_image.ImageDesc;
         auto pdestination_frame = result.get_frame_ptr(i);
         auto pprevious_frame = !first ? result.get_frame_ptr(i - 1) : nullptr;
-        auto colormap = source_image.ImageDesc.ColorMap
-            ? source_image.ImageDesc.ColorMap
+        auto colormap = image_desc.ColorMap
+            ? image_desc.ColorMap
             : pgif->SColorMap;
 
         DGifSavedExtensionToGCB(pgif, i, &gcb);
@@ -147,12 +147,12 @@ image image::from_gif(const void* sourcedata, size_t buffersize)
         }
 
         blit(source_image.RasterBits,
-            source_image.ImageDesc.Width,
-            source_image.ImageDesc.Height,
+            image_desc.Width,
+            image_desc.Height,
             pdestination_frame,
             w, h,
-            source_image.ImageDesc.Top,
-            source_image.ImageDesc.Left,
+            image_desc.Top,
+            image_desc.Left,
             colormap->Colors,
             gcb.TransparentColor);
     }
