@@ -127,27 +127,32 @@ image image::from_gif(const void* sourcedata, size_t buffersize)
     for(auto i=0;i<frames;++i)
     {
         bool first = i == 0;
-        auto sframe = pgif->SavedImages[i];
-        auto cframe = result.get_frame_ptr(i);
-        auto pframe = !first ? result.get_frame_ptr(i - 1) : nullptr;
-        auto colormap = sframe.ImageDesc.ColorMap
-            ? sframe.ImageDesc.ColorMap
+        const auto& source_image = pgif->SavedImages[i];
+        const auto& image_desc = source_image.ImageDesc;
+        auto pdestination_frame = result.get_frame_ptr(i);
+        auto pprevious_frame = !first ? result.get_frame_ptr(i - 1) : nullptr;
+        auto colormap = source_image.ImageDesc.ColorMap
+            ? source_image.ImageDesc.ColorMap
             : pgif->SColorMap;
 
         DGifSavedExtensionToGCB(pgif, i, &gcb);
 
-        if(!first)
+        if (!first && (
+            image_desc.Top != 0 ||
+            image_desc.Left != 0 ||
+            image_desc.Width != w ||
+            image_desc.Height != h))
         {
-            memcpy_s(cframe, framesize, pframe, framesize);
+            memcpy_s(pdestination_frame, framesize, pprevious_frame, framesize);
         }
 
-        blit(sframe.RasterBits,
-            sframe.ImageDesc.Width,
-            sframe.ImageDesc.Height,
-            cframe,
+        blit(source_image.RasterBits,
+            source_image.ImageDesc.Width,
+            source_image.ImageDesc.Height,
+            pdestination_frame,
             w, h,
-            sframe.ImageDesc.Top,
-            sframe.ImageDesc.Left,
+            source_image.ImageDesc.Top,
+            source_image.ImageDesc.Left,
             colormap->Colors,
             gcb.TransparentColor);
     }
