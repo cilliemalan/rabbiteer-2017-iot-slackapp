@@ -5,7 +5,7 @@ CPPFLAGS=-g -std=c++11 -Wall
 LDFLAGS=-g -std=c++11 -Wall
 LDLIBS=-lboost_system -lcpprest -lcrypto -lssl -lgif -lpng
 
-SRCS=main.cpp slackapp.cpp utils.cpp emoji.cpp
+SRCS=main.cpp slackapp.cpp utils.cpp emoji.cpp image.cpp
 OBJS=$(subst .cpp,.o,$(SRCS))
 PCH=pch.h.gch
 
