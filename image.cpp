@@ -136,6 +136,7 @@ image image::from_gif(const void* sourcedata, size_t buffersize)
             : pgif->SColorMap;
 
         DGifSavedExtensionToGCB(pgif, i, &gcb);
+        result._frame_delay[i] = gcb.DelayTime;
 
         if (!first && (
             image_desc.Top != 0 ||
@@ -209,7 +210,7 @@ image::image(int w, int h, int frames) :
     _w(w),
     _h(h),
     _frames(frames),
-    _frame_durations(frames),
+    _frame_delay(frames),
     _data(frames * w * h * 3)
 {
 }

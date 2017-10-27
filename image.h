@@ -23,7 +23,7 @@ private:
 
     int _w, _h;
     std::vector<unsigned char> _data;
-    std::vector<int> _frame_durations;
+    std::vector<int> _frame_delay;
     int _frames;
 };
 
