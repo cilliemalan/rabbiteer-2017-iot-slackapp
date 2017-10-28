@@ -4,10 +4,10 @@ class frame;
 class image
 {
 public:
-    image(const image& other) = default;
+    image(const image& other) = delete;
     image(image&& other) = default;
 
-    image& operator=(const image& other) = default;
+    image& operator=(const image& other) = delete;
     image& operator=(image&& other) = default;
 
     static image from_png(const void* sourcedata, size_t amt);
