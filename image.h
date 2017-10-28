@@ -15,8 +15,6 @@ public:
 
     std::vector<unsigned char> to_png(int frame);
 private:
-    friend class frame;
-
     explicit image(int w, int h, int frames);
     unsigned char* get_frame_ptr(int num);
     std::vector<unsigned char*> get_row_pointers(int frame);
@@ -25,18 +23,4 @@ private:
     std::vector<unsigned char> _data;
     std::vector<int> _frame_delay;
     int _frames;
-};
-
-
-class frame
-{
-private:
-    explicit frame(const image &i, int frame)
-        :_image(i), _frame(frame)
-    {
-    }
-
-    friend class image;
-    const image _image;
-    int _frame;
 };
