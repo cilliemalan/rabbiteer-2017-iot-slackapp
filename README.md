@@ -3,6 +3,8 @@
 This is a small application that integrates with Slack and marshalls messages between
 Slack and devices.
 
+This is an old repository and may not represent best practices.
+
 # Dependencies
 You will need the [REST SDK](https://github.com/Microsoft/cpprestsdk/wiki) from microsoft,
 giflib, and libpng. Install like:
